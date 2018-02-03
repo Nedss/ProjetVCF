@@ -1,0 +1,350 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+from matplotlib import pyplot
+from statistics import mean 
+import os, re, cgi, cgitb
+
+
+
+print("""Content-type: text/html
+
+""")
+
+
+#--------FONCTIONS------
+def verificationFichier(saisieFichier) :
+	tabExtraction = saisieFichier.split(".")
+	verif = ''
+	try :
+		if tabExtraction[1] == 'vcf' and os.path.exists(saisieFichier) : #si le fichier est un vcf et quil existe, OK
+			verif='VCF'
+		else :
+			verif = 'NonVCF'
+	except :
+		print("<h3>Vous n'avez pas saisi de fichier ...</h3>")
+		verif='pasFichier'
+
+	return verif
+
+
+def ouverture() :
+	fichier = open(formulaire["saisie"].value, 'r')
+	listeFichier = []
+#On met les lignes du fichier dans la liste
+	for ligne in fichier.readlines() :
+		listeFichier.append(ligne)
+	verif = 'VCF'
+#on ferme le fichier
+	fichier.close()
+
+	return listeFichier
+
+
+def verificationContenu(listeFichier) :
+	listeVerifs=[]
+	verifVersion =false
+	verifHeader =true
+	verifDonnees=true
+	for ligne in listeFichier :
+		#print(ligne)	
+#---------------------1 => verification de la version (VERSION 4)-----------------------
+		ligneVersion = re.search("#.*fileformat=VCF", ligne)
+		if ligneVersion : #si cest la ligne version
+			version = re.search("#.*VCFv4\.[0-9]", ligne)
+			if version : 
+				verifVersion = true
+				listeVerifs.append(verifVersion)
+#---------------------2 => verification du header-----------------------
+	listeHeader = extractionHeader(listeFichier)
+	if len(listeHeader) < 10 :
+		verifHeader = false
+		listeVerifs.append(verifHeader)
+#---------------------2 => verification des Donnees-----------------------
+	listeDonnees = extractionDico(listeFichier)
+	if len(listeDonnees) < 30 :
+		verifDonnees = false
+		listeVerifs.append(verifDonnees)
+
+	return listeVerifs
+
+def extractionHeader(liste):
+	list_header=[]
+	for lines in liste:
+		#print(lines)
+		#Recherche du header
+		if re.search("^#", lines):
+			list_header.append(lines)
+	return list_header
+
+def affichageHeader(liste_header):
+	print("<textarea>")
+	for i in liste_header :
+		print(i)
+	print("</textarea>")
+
+def extractionDico(liste):
+	dico_vcf={}
+	for lines in liste:
+		#Recherche du header
+		if re.search("^#", lines) :
+			continue
+		#Création du dictionnaire avec les infos importantes du VCF
+		else :
+			tab=lines.split("\t")
+			chrm=tab[0]
+			pos=tab[1]
+			if chrm in dico_vcf :
+				dico_vcf[chrm].append(pos)
+			else :
+				dico_vcf[chrm]=[]
+	return dico_vcf
+
+def affichageDico(dico_vcf):
+	for name_chr in dico_vcf :
+		if name_chr == 1 :
+			#On choisi par defaut le chromo 1 dans la liste deroulante
+			print("<option selected='select'>", name_chr, "</option>")
+		else :
+			print("<option>", name_chr, "</option>")
+		#for pos_chr in dico_vcf[name_chr]:
+			#print("<li>", name_chr," ",pos_chr,"</li>")
+
+def statMEI(dico_vcf):
+	#On trouve combien il y a d'élements par chromosomes 
+	mei=[]
+	for name_chr in dico_vcf :
+		comptageMEI=0
+		for pos_chr in dico_vcf[name_chr]:
+			comptageMEI+=1
+		mei.append(comptageMEI)
+	return mei
+
+def moyenneMEI(mei) :
+	#Calcul de la moyenne à partir dela fonction mean 
+	#La fonction a été importé à partir de statistic
+	moyenne=mean(mei)
+	return moyenne
+
+
+
+def maxChromo(mei):
+	#Recherche du maximum 
+	rech_max=0
+	for m in range(0, len(mei)):
+		if mei[m]>rech_max:
+			rech_max=mei[m]
+			m_max=m+1 
+			#Vu que notre nombre de MEI est trié dans l'endroit, en commançant par le chromosome 1
+			# on sait que m+1 correspond au chromosome que l'on cherche (m commençant à 0 il n'y 
+			# a pas de chromosome 0). 
+	return rech_max, m_max
+
+
+def minChromo(mei):
+	#Recherche du maximum 
+	rech_min=mei[0]
+	for m in range(1, len(mei)):
+		if mei[m]<rech_min :
+			rech_min=mei[m]
+			m_min=m+1 
+			#Vu que notre nombre de MEI est trié dans l'endroit, en commançant par le chromosome 1
+			# on sait que m+1 correspond au chromosome que l'on cherche (m commençant à 0 il n'y 
+			# a pas de chromosome 0). 
+	return rech_min, m_min
+
+
+#--------RECUPERATION DES DONNEES DU FORMULAIRE ET OUVERTURE DU FICHIER------
+formulaire = cgi.FieldStorage()
+
+#initialisation de la saisie
+saisieFichier = ''
+
+#--------AFFICHAGE DE LA PAGE------
+#Si la saisie est vide ou que lutilisateur n a pas cliqué sur envoyer => page de base avec que la saisie + message d'erreur
+if "saisie" not in formulaire or "envoyer" not in formulaire or verificationFichier(formulaire["saisie"].value) == 'pasFichier' :
+	print("""
+	<!DOCTYPE html>
+	<html>
+	  <head>
+	    <meta charset='UTF-8'>
+	    <title>Projet vcf</title>
+	    <link rel='stylesheet' href='../css/analyseVCF.css'>
+	    <link rel='stylesheet' href='../font/css/font-awesome.css'>
+		<link href="https://fonts.googleapis.com/css?family=Acme|Work+Sans" rel="stylesheet"> 
+	  </head>
+	  <body>
+	  	<header>
+	    	<h1>Analyse VCF</h1>
+	    </header>
+	    <main>
+	    	<form class='form1' action='analyseVCF.cgi' method='POST'>
+				<section id='saisieFichier'>
+					<label>Entrez le fichier :</label>
+					<input type='text' name='saisie'>
+					<input type='submit' name='envoyer'>
+				</section>
+			</form>
+		</main>
+		<style>
+		#foot{position: absolute;bottom:0;right:0;}
+		</style>
+		<footer id='foot'>
+			Projet sur l'analyse VCF r&eacute;alise par Moussa Samb, Nicolas Soirat et Axelle Nicolas, <em>Master Bioinformatique, Connaissances et Donn&eacute;es</em>
+		</footer>
+	  </body>
+	</html>
+	""")
+
+#Si la saisie est un "fichier" (si il y a un point) mais que ce n'est pas un vcf ou que le fichier n existe pas => page de base avec que la saisie + message d'erreur
+elif verificationFichier(formulaire["saisie"].value) == 'NonVCF' :
+		print("""
+		<!DOCTYPE html>
+		<html>
+		  <head>
+		    <meta charset='UTF-8'>
+		    <title>Projet vcf</title>
+		    <link rel='stylesheet' href='../css/analyseVCF.css'>
+		    <link rel='stylesheet' href='../font/css/font-awesome.css'>
+			<link href="https://fonts.googleapis.com/css?family=Acme|Work+Sans" rel="stylesheet"> 
+		  </head>
+		  <body>
+		  	<header>
+		    	<h1>Analyse VCF</h1>
+		    </header>
+		    <main>
+		    	<form class='form1' action='analyseVCF.cgi' method='POST'>
+					<section id='saisieFichier'>
+						<label>Entrez le fichier :</label>
+						<input type='text' name='saisie'>
+						<input type='submit' name='envoyer'>
+					</section>
+				</form>
+				<h3>Le fichier que vous avez saisi n'existe pas ou n'est pas un VCF</h3>
+			</main>
+			<style>
+			#foot{position: absolute;bottom:0;right:0;}
+			</style>
+			<footer id='foot'>
+				Projet sur l'analyse VCF r&eacute;alise par Moussa Samb, Nicolas Soirat et Axelle Nicolas, <em>Master Bioinformatique, Connaissances et Donn&eacute;es</em>
+			</footer>
+		  </body>
+		</html>
+		""")
+
+#Si la saisie est un VCF qui existe => page complete avec les infos generales
+else : 
+	#ouverture du fichier, transfert des donnees du fichier dans la liste et fermeture du fichier
+	listeFichier = ouverture()
+	#on met dans le dico les donnees vcf
+	dico_vcf = extractionDico(listeFichier)
+	#Liste des MEI par chromosome
+	listeMei = statMEI(dico_vcf)
+	print(listeMei)
+	#On calcul le chromosome qui a le plus de MEI
+	nbMEIMax, maxChromosome = maxChromo(listeMei)
+	#On calcul le chromosome avec le moins de MEI
+	nbMEIMin, minChromosome = minChromo(listeMei)
+	#Recuperation du fichier dans un input type hidden pour pouvoir le transmettre à la page analyseDetails via le formulaire 
+	recupFichier = formulaire["saisie"].value
+
+	print("""
+		<!DOCTYPE html>
+		<html>
+		  <head>
+		    <meta charset='UTF-8'>
+		    <title>Projet vcf</title>
+		    <link rel='stylesheet' href='../css/analyseVCF.css'>
+		    <link rel='stylesheet' href='../font/css/font-awesome.css'>
+		  </head>
+		  <body>
+		    <header>
+		    	<h1>Analyse VCF</h1>
+		    </header>
+		    <main>
+		    	<form class='form1' action='analyseVCF.cgi' method='POST'>
+					<section id='saisieFichier'>
+							<input type='submit' name='envoyer' value='recommencer avec un autre fichier'>		
+					</section>
+
+				<h2>Donn&eacute;es de votre fichier :</h2>
+				<section id='donneesHeader'>
+					<div class='description'>
+						<h3>Header
+							<a class='plus-toggle' href='#'>
+								<i class='fa fa-plus' aria-hidden='true'></i>
+							</a>
+						</h3>
+		<!-- quand on clique sur licone -, la div se cache via la classe hide -->
+						<div class='hide'> 
+							
+			
+	""")	
+	#affichage du header dans la div
+	affichageHeader(extractionHeader(listeFichier))
+	print("""
+						</div>
+					</div>
+				</section>
+
+				<section id='Statistiques'>
+					<h4>Les statistiques de votre &eacute;chantillon 
+	""") 
+
+	#On affiche le nombre de chromosome dans lechantillon (-1 car none dans dico_vcf)
+	print("(",len(dico_vcf)-1,"chromosomes ) <br><em>- toutes les qualit&eacute;s sont accept&eacute;es -</em></h4>") 
+
+	print("""
+					<div id="blocsStat">
+						<div><h5>MOYENNE G&Eacute;N&Eacute;RALE</h5>
+	""")
+
+	#on affiche la moyenne generale (on tronque le resultat avec int(value))
+	print("<p>On trouve en moyenne ",int(moyenneMEI(listeMei))," MEI par chromosome (moyenne tronqu&eacute;e) </p></div>")
+
+
+	print("""
+						<div id="milieu"><h5>MAXIMUM</h5>
+	""")
+
+	print("<p>Le chromosome ",maxChromosome," contient le plus de MEI (avec ",nbMEIMax," MEI)</p></div>")
+
+	print("""
+						<div><h5>MINIMUM</h5>
+	""")
+
+	print("<p>Le chromosome ",minChromosome," contient le moins de MEI (avec ",nbMEIMin," MEI)</p></div>")
+
+	print("""
+					</div>
+					<div id="meiParChromo"><h5>NOMBRE DE MEI PAR CHROMOSOME</h5>
+	""")
+
+	print("""
+					</div>
+
+					<h4>Encore plus de d&eacute;tails</h4>
+					<p>Pour plus d'information, choisir un chromosome : </p>
+				</form>
+			</section>
+			<form id='form2' action='analyseDetails.cgi' method='POST'>
+				<select name='chromo' id='chromo'>
+	""")
+
+	#Affiche dans les balises option les chromosomes dans la liste deroulante
+	numeroChromo = affichageDico(dico_vcf)
+
+	print("</select><input type='hidden' name='recupFichier' value=",recupFichier,">")
+	print("""
+				<input type='submit' name='soumettre' id='soumettre' value='Je choisis ce chromosome'>	
+			</form>
+			<script src='../js/analyseVCF.js'></script>
+		</main>
+		<footer>
+			Projet sur l'analyse VCF r&eacute;alise par Moussa, Nicolas et Axelle Nicolas, <em>Master Bioinformatique, Connaissances et Donn&eacute;es</em>
+		</footer>
+	</body>
+</html>
+	""")
+
+
+

@@ -1,0 +1,199 @@
+* {
+	font-size: 1em;
+	color: #525353;
+	font-family: 'Work Sans', sans-serif;
+	background-color: #EBEEEF;
+}
+
+h1{
+	color : #444545;
+	font-size: 2em;
+	text-align: center;
+	margin: 1em;
+	font-family: 'Acme', sans-serif;
+}
+
+h2{
+	font-family: 'Acme', sans-serif;
+	text-align: center;
+	margin: 0.5em;
+	color : #444545;
+	font-size: 1.5em;
+	margin: 1em;
+}
+
+h3 {
+	font-size: 1.3em;
+	display: flex;
+	justify-content: space-around;
+	background-color: #ddddde;
+	padding: 0.5em;
+	box-shadow: 0px -1px 2px #ddddde;
+}
+
+h4{
+	font-size: 1.3em;
+	padding: 0.5em;
+	text-align: center;
+}
+
+h5 {
+	text-decoration: underline;
+	font-weight: normal;
+	text-align: center;
+	margin: 0;
+	padding-bottom: 0.5em;
+}
+
+h6{
+	font-weight: bold;
+}
+
+#form2{
+	background-color: #EBEEEF;
+}
+
+form label {
+	background-color: #ACA9B0;
+}
+
+#saisieFichier {
+	display: flex;
+	flex-direction: column;
+	background-color: #ACA9B0;
+	padding: 1.2em 0;
+	box-shadow: 5px 3px 13px #ACA9B0;
+}
+
+label {
+	display: block;
+	text-align: center;
+	padding: 1em 0;
+}
+
+input[type="submit"] {
+	display: block;
+	margin: 1em auto;
+	padding: 0.3em;
+	background-color: #E0E0E0;
+	border: solid #E0E0E0;
+	border-radius: 10px;
+	cursor: pointer;
+}
+
+#env {
+	border: solid #E0E0E0;
+	border-radius: 10px;
+	display: block;
+	padding: 0.5em;
+	margin: 1em auto;
+}
+
+input[type="text"] {
+	border: solid #B0B6B8 1px;
+	border-radius: 5px;
+	width: 20%;
+	margin: auto;
+}
+
+.hide {
+	display: none;
+}
+
+.description {
+	background-color: #ddddde;
+	width: 100%;
+}
+
+.description div {
+
+}
+
+textarea {
+	display: block;
+	width: 100%;
+	height: 195px;
+	margin: auto;
+	border: none;
+	background-color: #ddddde;
+}
+
+a, i {
+	background-color: #ddddde;
+}
+
+#blocsStat {
+	display: flex;
+	justify-content: space-around;
+	font-style: italic;
+}
+
+#blocsStat p {
+	font-style: none;
+}
+
+#blocsStat div {
+	padding: 0 80px;
+}
+
+#meiParChromo {
+	font-style: italic;
+	text-align: center;
+	padding: 4em;
+} 
+
+.nbMEIclass{
+	margin-top:3em;
+}
+
+#milieu {
+	border-right: solid;
+	border-left: solid;
+	
+}
+
+#Statistiques p {
+	text-align:center;
+}
+
+#chromoChoisi {
+	font-weight: bold;
+	width: 2%;
+	border: none;
+}
+
+.divDetails {
+    margin: 2em 8em;
+    padding: 1.5em;
+    border: 1px solid #b0b6b8;
+}
+
+.divDetails ul{
+    text-align: center;
+    padding: 0;
+}
+
+.divDetails li{
+	list-style-type: none;
+}
+
+
+select {
+	display: block;
+	margin: auto;
+	border: solid aliceblue;
+	padding: 0.3em;
+}
+
+footer {
+	text-align: right;
+	font-size: 0.7em;
+	margin: 0.5em;
+	color: #B1B1B1;
+}
+
+footer em {
+	color: #B1B1B1;
+	display: block;
+	text-align: right;
+}
